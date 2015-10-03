@@ -1,0 +1,229 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+int move(int *x_coord, int *y_coord,int *food, int *water, char loc);
+void hunt(int *food);
+void fish(int *food);
+int main()
+{
+    srand(time(NULL));
+    int roll = rand() % 100;
+    char world [300][300];
+    int stats[5];
+    int x,y;
+    int running = 1;
+    int tree_chance = 10;
+    int water_chance = 5;
+    int bush_chance = 25;
+    int grass_chance = 60;
+    int p_x = 150;
+    int p_y = 150;
+    int hunger = 0;
+    int thirst = 0;
+    for (y = 0; y < 300; y ++)
+    {
+        for (x = 0; x < 300; x++)
+        {
+            roll = rand() % 101;
+            if (roll < tree_chance)
+            {
+                world[x][y] = '|';
+            }
+            else if (roll < water_chance + tree_chance && roll > tree_chance)
+            {
+                world[x][y] = '~';
+            }
+            else if (roll < bush_chance + water_chance + tree_chance && roll > tree_chance + water_chance)
+            {
+                world[x][y] = '*';
+            }
+            else if (roll < bush_chance + water_chance + tree_chance + grass_chance && roll > tree_chance + water_chance + bush_chance)
+            {
+                world[x][y] = ',';
+            }
+            else
+            {
+                world[x][y] = '.';
+            }
+        }
+    }
+    printf("World generated, starting adventure. \n");
+    while(running)
+    {
+        for (y = p_y-10; y < p_y+10; y ++)
+        {
+            for (x = p_x-20; x < p_x+20; x ++)
+            {
+                if (y == p_y && x == p_x)
+                {
+                    printf("@");
+                }
+                else
+                {
+                    printf("%c", world[x][y]);
+                }
+            }
+            printf("\n");
+        }
+        stats[move(&p_x, &p_y, &hunger, &thirst, world[p_x][p_y])] +=1;
+        if (hunger >= 100 || thirst >= 100)
+        {
+            running = 0;
+        }
+    }
+
+    if (hunger >= 100)
+    {
+        printf("You starved to death. \n");
+    }
+    if (thirst >= 100)
+    {
+        printf("You died of thirst. \n");
+    }
+    printf("You hunted %d times, fished %d times, drank %d times, and gathered berries %d times.", stats[0], stats[1], stats[2], stats[3]);
+    return 0;
+}
+
+int move(int *x_coord, int *y_coord,int *food, int *water, char loc)
+{
+    int stat_up;
+    char input = 0;
+    printf("Your hunger is %d / 100, and your thirst is %d /100. \n", *food, *water);
+    if (loc == '|')
+    {
+        printf("You are in a forest. Would you like to move (n,s,e,w), or (h)unt? \n");
+    }
+    if (loc == '~')
+    {
+        printf("You are in the water. Would you like to move (n,s,e,w), (f)ish, or (d)rink? \n");
+    }
+    if (loc == ',' || loc == '.')
+    {
+        printf("You are in an open area. Where would you like to go (n,s,e,w)? \n");
+    }
+    if (loc == '*')
+    {
+        printf("You are in a thicket. Would you like to move (n,s,e,w), or (g)ather berries? \n");
+    }
+    scanf("\n%c", &input);
+    if (input == 'h')
+    {
+        if (loc == '|')
+        {
+            //hunt function
+            stat_up = 0;
+            hunt(food);
+        }
+        else
+        {
+            stat_up = 4;
+            printf("Can't hunt: not in forest. \n");
+        }
+    }
+    else if (input == 'f')
+    {
+        if (loc == '~')
+        {
+            //fish function
+            stat_up = 1;
+            fish(food);
+        }
+        else
+        {
+            stat_up = 4;
+            printf("Can't fish: not in water. \n");
+        }
+    }
+    else if (input == 'd')
+    {
+        if (loc == '~')
+        {
+            stat_up = 2;
+            printf("Drank water. \n");
+            *water = 0;
+            *food += 5;
+        }
+        else
+        {
+            stat_up = 4;
+            printf("Can't drink: not in water. \n");
+        }
+    }
+    else if (input == 'g')
+    {
+        if (loc == '*')
+        {
+            stat_up = 3;
+            printf("Ate some tasty berries. \n");
+            *food = 0;
+        }
+        else
+        {
+            stat_up = 4;
+            printf("Can't gather berries: not in thicket. \n");
+        }
+    }
+    else if (input == 'n')
+    {
+        stat_up = 4;
+        *y_coord -= 1;
+        *food += 5;
+        *water += 5;
+    }
+    else if (input == 'e')
+    {
+        stat_up = 4;
+        *x_coord += 1;
+        *food += 5;
+        *water += 5;
+    }
+    else if (input == 'w')
+    {
+        stat_up = 4;
+        *x_coord -= 1;
+        *food += 5;
+        *water += 5;
+    }
+    else if (input == 's')
+    {
+        stat_up = 4;
+        *y_coord += 1;
+        *food += 5;
+        *water += 5;
+    }
+    else
+    {
+        stat_up = 4;
+        *food += 5;
+        *water += 5;
+    }
+    return stat_up;
+}
+
+void hunt(int *food)
+{
+    int roll = rand() % 100;
+    if (roll < *food)
+    {
+        printf("Successfully caught and ate a tasty animal! \n");
+        *food = 0;
+    }
+    else
+    {
+        printf("Failed to find any food. \n");
+    }
+}
+
+void fish(int *food)
+{
+    int roll = rand() % 100;
+    if (roll < *food)
+    {
+        printf("Successfully caught and ate a hearty fish! \n");
+        *food= *food/2;
+    }
+    else
+    {
+        printf("Failed to find any food. \n");
+    }
+}
